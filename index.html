@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
+      #input:focus { outline: none; }
+      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages > li { padding: 0.5rem 1rem; }
+      #messages > li:nth-child(odd) { background: #efefef; }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+      <input id="input" autocomplete="off" /><button>Send</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      function makeid(length) {
+        var result = [];
+        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var charactersLength = characters.length;
+        for ( var i = 0; i < length; i++ ) {
+          result.push(characters.charAt(Math.floor(Math.random() * 
+              charactersLength)));
+        }
+        return result.join('');
+      }
+
+      const hash = window.location.hash
+      if(!hash){
+        window.location.hash = makeid(6)
+        window.location.reload()
+      } else {
+        console.log(hash)
+      }
+
+      var socket = io()
+      name = prompt("Enter your name:")
+      socket.emit("join", name, hash)
+    
+      var form = $("#form")
+      var input = $("#input")
+    
+      form.on('submit', function(e) {
+        e.preventDefault()
+        if (input.val()) {
+          socket.emit("message", input.val(), name, hash)
+          input.val("")
+        }
+      })
+
+      socket.on("message", (msg, name) => {
+        $("#messages").append("<li>" + name + ": " + msg + "</li>")
+      })
+      socket.on("join", (name, hash) => {
+        $("#messages").append("<li>" + name + " has joined room " + hash + ".</li>")
+      })
+    </script>
+
+  </body>
+</html>
